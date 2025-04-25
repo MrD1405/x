@@ -10,6 +10,7 @@ import Lottie from "react-lottie";
 import {Input} from "@/components/ui/input";
 import { animationDefaultOptions } from "@/lib/utils";
 import { useAppStore } from "@/store";
+import { getColor } from "@/lib/utils";
 
 const NewDM = () => {
     const {setSelectedChatType, setSelectedChatData} = useAppStore();
@@ -22,6 +23,7 @@ const NewDM = () => {
                 const response = await apiClient.post(SEARCH_CONTACTS_ROUTES, {searchTerm}, {withCredentials: true});
                 if(response.status === 200 && response.data.contacts){
                     setSearchedContacts(response.data.contacts);
+                    console.log(searchedContacts);
                 }
             }else{
                 setSearchedContacts([]);
@@ -32,7 +34,7 @@ const NewDM = () => {
     };
 
     const selectNewContact = (contact) => {
-        seetOpenNewContactModal(false);
+        setOpenNewContactModal(false);
         setSelectedChatType("contact");
         setSelectedChatData(contact);
         setSearchedContacts([]);
@@ -63,31 +65,31 @@ const NewDM = () => {
                 <div>
                    <Input placeholder="search contacts" className="rounded-lg p-6 bg-[#2c2e3b] border-none" onChange = {(e)=> searchContacts(e.target.value)} type="text"/>
                 </div>
-                { searchContacts.length > 0 && (
+                {searchedContacts.length > 0 && (
                 <ScrollArea className="h-[250px] ">
                     <div className="flex flex-col gap-5">
                         {
-                            searchedContacts.map((contact) => {
-                                (<div className="flex gap-3 items-center  cursor-pointer" key={contact.id} onClick={()=>selectNewContact(contact)}>
+                            searchedContacts.map((contactInfo) => {
+                                return (<div className="flex gap-3 items-center  cursor-pointer" key={contactInfo._id} onClick={()=>selectNewContact(contactInfo)}>
                                     <div className="w-12 h-12 relative">
                                     <Avatar className="h-12 w-12 rounded-full overflow-hidden">
                                         {
-                                            contact.image ? (<AvatarImage src={`${HOST}/${contact.image}`} alt="profile" className="object-cover w-full h-full bg-black" />
+                                            contactInfo.image ? (<AvatarImage src={`${HOST}/${contactInfo.image}`} alt="profile" className="object-cover w-full h-full bg-black" />
                                                             ) : (
-                                                            <div className={`uppercase h-12 w-12  text-lg border-[1px] flex items-center justify-center rounded-full ${getColor(contact.color)}`}>{
-                                                                contact.firstName ? contact.firstName.split("").shift() : contact.email.split("").shift()
+                                                            <div className={`uppercase h-12 w-12  text-lg border-[1px] flex items-center justify-center rounded-full ${getColor(contactInfo.color)}`}>{
+                                                                contactInfo.firstName ? contactInfo.firstName.split("").shift() : contactInfo.email.split("").shift()
                                             }</div> )
                                         }
                                     </Avatar>
                                     </div>
                                     <div className="flex flex-col">
                                     <span>
-                                    {contact.firstName && contact.lastName ? `${contact.firstName} ${contact.lastName}` : contact.email
+                                    {contactInfo.firstName && contactInfo.lastName ? `${contactInfo.firstName} ${contactInfo.lastName}` : contactInfo.email
                                     }
                                     </span>
-                                    <span className="text-xs"> {contact.email}</span>
+                                    <span className="text-xs"> {contactInfo.email}</span>
                                     </div>
-                                </div>)
+                                </div>);
                             })
                         }
                     </div>

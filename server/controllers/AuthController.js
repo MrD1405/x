@@ -99,7 +99,8 @@ export const updateProfile = async (request,response,next) => {
         if(!firstName || !lastName){
             return response.status(400).send("Firstname, lastname and color required for this API");
         }
-        console.log("hello");
+
+
         const userData = await User.findByIdAndUpdate(userId,
         {
             firstName,lastName,color,profileSetup:true,
@@ -120,3 +121,12 @@ export const updateProfile = async (request,response,next) => {
     }
 };
 
+export const logout  = async (request,response,next) => {
+    try{
+        response.cookie("jwt","",{maxAge:1, secure: true, sameSite: "None"});
+        return response.status(200).send("Logout successfull.");
+    }catch(error){
+        console.log({error});
+        return response.status(500).send("Internal server error");
+    }
+};

@@ -1,5 +1,5 @@
 import { useAppStore } from "@/store"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {IoArrowBack} from "react-icons/io5";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +21,15 @@ const Profile = () => {
     const [image,setImage] = useState(null);
     const [hovered, setHovered] = useState(false);
     const [selectedColor,setSelectedColor] = useState(0);
+    
+    useEffect(()=> {
+        if(userInfo.profileSetup){
+            setFirstName(userInfo.firstName);
+            setLastName(userInfo.lastName);
+            setSelectedColor(userInfo.color);
+        }
+    },[userInfo]);
+
 
     const validateProfile = () =>{
         if(!firstName){
@@ -39,10 +48,12 @@ const Profile = () => {
             try{
                 const response = await apiClient.post(UPDATE_PROFILE_ROUTE, {firstName, lastName, color : selectedColor}, {withCredentials: true});
                 console.log(response);
+                navigate("/chat");
                 if(response.status === 200 && response.data){
                     setUserInfo({...response.data});
                     toast.success("Profile updated successfully");
-                    navigate("/chat");
+                    console.log("its success");
+                    
                 }
             }catch(error){
                 console.log(error);

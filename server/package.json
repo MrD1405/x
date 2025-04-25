@@ -18,10 +18,25 @@
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.13.1",
-    "socket.io": "^4.8.1"
+    "multer": "^1.4.5-lts.2",
+    "mongoose": "^8.13.2",
+    "socket.io": "^4.8.1",
+    "phaser": "^3.88.2",
+    "phaser-matter-collision-plugin": "^1.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.2",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "terser": "^5.28.1",
+    "vite": "^5.3.1"
   }
 }
