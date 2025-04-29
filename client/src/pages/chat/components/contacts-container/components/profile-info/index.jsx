@@ -2,19 +2,29 @@ import { Avatar } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent , TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getColor } from "@/lib/utils";
 import { useAppStore } from "@/store";
-import { HOST } from "@/utils/constants";
+import { HOST, LOGOUT_ROUTE } from "@/utils/constants";
 import React from "react";
 import { FiEdit2 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { IoLogOut, IoPowerSharp } from "react-icons/io5";
+import { apiClient } from "@/lib/api-client";
 
 const ProfileInfo = () => {
 
-    const {userInfo} = useAppStore();
+    const {userInfo,setUserInfo} = useAppStore();
     const navigate = useNavigate();
 
     const logOut = async ()=>{
+        try{
+            const response = await apiClient.post(LOGOUT_ROUTE,{},{withCredentials:true});
 
+            if(response.status === 200){
+                navigate("/auth");
+                setUserInfo(null);
+            }
+        }catch(error){
+            console.log(error);
+        }
     }
 
     return (
@@ -31,15 +41,15 @@ const ProfileInfo = () => {
                 }
             </Avatar>
             </div>
-            <div
+            <div>
                 {...userInfo.firstName && userInfo.lastName ? `${userInfo.firstName} ${userInfo.lastName}` : ""
                 }
-            ></div>
+            </div>
         </div>
         <div className="flex gap-5">
             <TooltipProvider>
                 <Tooltip>
-                    <TooltipTrigger>\
+                    <TooltipTrigger>
                         <FiEdit2 className="text-purple-500 text-xl font-medium" onClick = {()=>navigate("/profile")}/>
                     </TooltipTrigger>
                     <TooltipContent className="bg-[#1c1b1e] border-none text-white">
@@ -49,7 +59,7 @@ const ProfileInfo = () => {
             </TooltipProvider>
             <TooltipProvider>
                 <Tooltip>
-                    <TooltipTrigger>\
+                    <TooltipTrigger>
                         <IoPowerSharp className="text-red-500 text-xl font-medium" onClick = {logOut}/>
                     </TooltipTrigger>
                     <TooltipContent className="bg-[#1c1b1e] border-none text-white">
