@@ -6,7 +6,8 @@ import { io } from 'socket.io-client';
 import { playerInfo } from '@/App';
 
 
-
+let enableJoin=false;
+export {enableJoin};
 export class Office extends Scene
 {
     cursors;
@@ -14,7 +15,7 @@ export class Office extends Scene
     player_instance;
     pos={x:0,y:0};
     oldPos={x:0,y:0};
-    vel;
+    vel={x:0,y:0};
     players={};//dictionary with key of socket.id
     otherPlayers={};
     layer1;
@@ -44,7 +45,7 @@ export class Office extends Scene
     create ()
     {
         this.playerInfo=playerInfo;
-        console.log(this.playerInfo);
+        //console.log(this.playerInfo);
         this.initializeSocket();
         this.setupSocketEvents(); 
     
@@ -71,18 +72,7 @@ export class Office extends Scene
         this.cursors=this.input.keyboard.createCursorKeys();
 
         
-        //assigning each frame based on name in spritesheet
        
-        
-        // if(!this.startGame){
-        //     this.scene.pause('Office');
-            
-        //     console.log("paused");
-        //  }
-        // else if(this.startGame && this.scene.isPaused('Office')){
-        //     this.scene.resume('Office');
-        //     console.log("resumed");
-        // }
         
     }
     
@@ -90,10 +80,7 @@ export class Office extends Scene
         const speed=60.5;
         
         
-        // if(this.startGame && this.scene.isPaused('Office')){
-        //     this.scene.resume('Office');
-        //     console.log("resumed");
-        // }
+
         //changing velocity of player based on input
         let player_velocity=new Phaser.Math.Vector2();
        
@@ -135,14 +122,29 @@ export class Office extends Scene
                 clientId:this.clientId,
                 x:this.pos.x,
                 y:this.pos.y,
-                // vel:{x:this.vel.x,y:this.vel.y},
+                vel:{x:this.vel.x,y:this.vel.y},
             });
             this.oldPos.x=this.pos.x;
             this.oldPos.y=this.pos.y;
             
         }
     
-        
+        if((this.player_instance.x>200)&& this.player_instance.x<300 && this.player_instance.y>100 && this.player_instance.y<200){
+           if(!enableJoin)enableJoin=true;
+            //this.socket.emit('createRoom',this.clientId);
+        }
+        else{
+            enableJoin=false;
+        }
+
+
+        this.tweens.add({
+            targets:this.playerNames[this.clientId],
+            x:this.pos.x,
+            y:this.pos.y-16,
+            ease:'Linear',
+            duration:2,
+        })
         ///if a person enters a certain boundary create another room for him
         //we should have 2 desks and a meeting room
         //create whiteboard
@@ -161,6 +163,7 @@ export class Office extends Scene
                 align: 'center',
                 justify: 'center',
             }).setOrigin(0.5).setDepth(100);
+            
             this.startGame=true;
             this.pos={x:x,y:y};
             this.player_instance.x=this.pos.x;
@@ -231,7 +234,14 @@ export class Office extends Scene
             if(this.players[clientId]){
                 const otherplayer=this.otherPlayers[clientId];
                 const otherPlayerName=this.playerNames[clientId];
-                
+                console.log(otherPlayerName);
+                this.tweens.add({
+                    targets:otherPlayerName,
+                    x:x,
+                    y:y-16,
+                    duration:1000,
+                    ease:'Linear'
+                });
                 this.tweens.add({
                     targets:otherplayer,
                     x:x,
@@ -245,14 +255,8 @@ export class Office extends Scene
                     // onComplete:()=>{
                     //     otherplayer.anims.play('idle-left',true);
                     // }
-                })
-                this.tweens.add({
-                    targets:otherPlayerName,
-                    x:x,
-                    y:y-16,
-                    duration:1000,
-                    ease:'Linear'
-                })
+                });
+                
             }
         });
 

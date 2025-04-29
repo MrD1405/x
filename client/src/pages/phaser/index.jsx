@@ -1,4 +1,5 @@
 import React from 'react'
+import { useRef,useEffect ,useState} from 'react';
 import { PhaserGame } from '../../game/PhaserGame';
 import {Avatar, AvatarImage} from "@/components/ui/avatar";
 import { getColor } from '@/lib/utils';
@@ -7,12 +8,24 @@ import { useAppStore } from '@/store';
 import { useNavigate } from 'react-router-dom';
 import { IoPowerSharp, IoChatbubbles} from 'react-icons/io5';
 import { Button } from '@/components/ui/button';
-
+import { enableJoin } from '@/game/scenes/Office';
+import  setUpMedia ,{setUpPeerConnection} from '@/pages/calls/setUpMedia';
+// import { use } from 'matter';
 
 const WorkSpace = () => {
 
+  const [ callStatus, updateCallStatus ] = useState({})
+  const [ localStream, setLocalStream ] = useState(null)
+  const [ remoteStream, setRemoteStream ] = useState(null)
+  const [ peerConnection, setPeerConnection ] = useState(null)
+  const [ userName, setUserName ] = useState("")
+  const [ offerData, setOfferData ] = useState(null)
   const {userInfo,setUserInfo} = useAppStore();
+  // console.log(userInfo);
+  
+
   const navigate = useNavigate();
+  const joinButtonRef=useRef(null);
   const logOut = async ()=>{
     try{
       const response = await apiClient.post(LOGOUT_ROUTE,{},{withCredentials:true});
@@ -25,9 +38,25 @@ const WorkSpace = () => {
       console.log(error);
     }
   };
+  useEffect(()=>{
+    async function settingUp(){
+      await setUpMedia(callStatus,updateCallStatus,setLocalStream);
+    }
+    settingUp();
+  },[userName]);
 
+  useEffect(()=>{
+    
+    setUserName(userInfo.firstName);
+    joinButtonRef.current.classList.remove("invisible");
+    if(!enableJoin){
+      joinButtonRef.current.classList.add("invisible");
+    }
+    
+  },[enableJoin]);
   const handleJoinClick = async ()=>{
-
+    setUpPeerConnection(callStatus.haveMedia,peerConnection,setPeerConnection,remoteStream,setRemoteStream);
+  
   };
 
   return (
@@ -58,7 +87,7 @@ const WorkSpace = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="flex items-center justify-items-center">
-                  <Button className=" absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1" onClick = {handleJoinClick()}>Join Meeting</Button>
+                  <Button className="invisible absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " ref={joinButtonRef} onClick = {handleJoinClick}>Join Meeting</Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#1c1b1e] border-none text-white">
                     Join

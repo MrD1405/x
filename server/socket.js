@@ -135,6 +135,9 @@ const setupSocket = (server) => {
     io.of("player").on("disconnect", (socket)=>{
         socket.broadcast.emit('playerDisconnected', state[roomId].players);
     });
+    io.of("media").on("connection",(socket)=>{
+        
+    })
 };
 
 
