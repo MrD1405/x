@@ -6,7 +6,8 @@ import Profile from "./pages/profile";
 import { useAppStore } from "./store";
 import { apiClient } from "./lib/api-client";
 import { GET_USER_INFO } from "./utils/constants";
-import  Home from "./pages/home/index";
+import  Home from "./pages/home";
+import WorkSpace from "./pages/phaser/index";
 
 let playerInfo;
 const PrivateRoute = ({children})=>{
@@ -70,6 +71,9 @@ const App = () => {
         <Route path="/home" element={<PrivateRoute>
           <Home/>
         </PrivateRoute>}/>
+        <Route path="/workspace" element={<PrivateRoute>
+          <WorkSpace />
+        </PrivateRoute>} />
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>
     </BrowserRouter>

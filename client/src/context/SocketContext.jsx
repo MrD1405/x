@@ -2,7 +2,7 @@ import { HOST } from "@/utils/constants";
 import { createContext, useEffect, useRef , useContext} from "react";
 import { IoReturnUpBack } from "react-icons/io5";
 import { useAppStore } from "@/store";
-import io from "socket.io-client";
+import {io,Socket} from "socket.io-client";
 
 const SocketContext = createContext(null);
 
@@ -55,4 +55,4 @@ export const SocketProvider = ({children}) => {
             {children}
         </SocketContext.Provider>
     )
-}
+};
