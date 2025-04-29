@@ -10,6 +10,7 @@ const state={
         ]
     }
 };
+const players={};
 const setupSocket = (server) => {
     const io = new SocketIoServer(server,{
         cors:{
@@ -95,31 +96,35 @@ const setupSocket = (server) => {
     io.of("/player").on("connection",(socket)=>{
         socket.on("addMember",(data)=>{
             if(data===undefined)return;
-            if(state[roomId].players.find((player)=>player.clientId===data)){
-                return;
+            if(state[roomId].players.find((player)=>player.clientId===data.id)){
+                const player=state[roomId].players.find((player)=>player.clientId===data.id);
+                socket.emit('playerInfo',{clientId:player.clientId,x:player.x,y:player.y,name:data.firstName});
+                socket.emit("allMembers",getPlayersData(roomId));
             }
+            else{
             console.log(data);
-            const clientId=data;
+            const clientId=data.id;
             const {x,y,vel}=getPlayerInfo();
             socket.join(roomId);
-            socket.emit("playerInfo",{clientId,x,y,vel});
+            socket.emit("playerInfo",{clientId,x,y,name:data.firstName});//to sender
             socket.emit("allMembers",getPlayersData(roomId));//to sender
     
             state[roomId].players.push({
                 clientId:clientId,
                 x:x,
                 y:y,
-                vel:{x:0,y:0}
+                name:data.firstName,
             })
-            socket.to(roomId).emit("newMember",[clientId,x,y,vel]);// to all already present in the server except the sender
-            
+            socket.to(roomId).emit("newMember",[clientId,x,y,data.firstName]);// to all already present in the server except the sender
+            }
         })
+        
         socket.on("playerMovement",(data)=>{
             console.log(data);
             socket.to(roomId).emit("otherPlayerMovement",data);
         })
         function getPlayerInfo(){
-            const {x,y,vel}= {x:Math.floor(400*(Math.random())),y:Math.floor(200*(Math.random())),vel:{x:0,y:0}};
+            const {x,y,vel}= {x:Math.floor(200*(Math.random())+200),y:Math.floor(100*(Math.random())+100),vel:{x:0,y:0}};
             return {x,y,vel};
         }
         function getPlayersData(roomId){
@@ -127,6 +132,9 @@ const setupSocket = (server) => {
             if(state[roomId])return state[roomId].players;
         }
     })
+    io.of("player").on("disconnect", (socket)=>{
+        socket.broadcast.emit('playerDisconnected', state[roomId].players);
+    });
 };
 
 

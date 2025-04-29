@@ -4,6 +4,8 @@ import { Office } from './scenes/Office';
 
 import Phaser from 'phaser';
 import { Preloader } from './scenes/Preloader';
+import { ErrorPage } from './scenes/ErrorPage';
+import { Load } from './scenes/Load';
 
 // Find out more information about the Game Config at:
 // https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -25,7 +27,8 @@ const config = {
         Boot,
         Preloader,
         Office,
-        
+        ErrorPage,
+        Load
     ],
     
     

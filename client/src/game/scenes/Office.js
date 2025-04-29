@@ -10,15 +10,20 @@ import { playerInfo } from '@/App';
 export class Office extends Scene
 {
     cursors;
+    startGame=false;
     player_instance;
-    pos;
+    pos={x:0,y:0};
     oldPos={x:0,y:0};
     vel;
     players={};//dictionary with key of socket.id
     otherPlayers={};
     layer1;
     layer2;
+    playerNames={};
     playerInfo;
+    get startGame(){
+        return this.startGame;
+    }
     constructor ()
     {
         super('Office');
@@ -39,9 +44,11 @@ export class Office extends Scene
     create ()
     {
         this.playerInfo=playerInfo;
-        console.log(this.playerInfo.id);
+        console.log(this.playerInfo);
         this.initializeSocket();
-        this.setupSocketEvents();
+        this.setupSocketEvents(); 
+    
+        this.createAnimations();
 
         //loading tilemap
         const map=this.make.tilemap({key:'map'});
@@ -51,20 +58,45 @@ export class Office extends Scene
         this.layer2=map.createLayer('objects',tileset,0,0);
         this.layer2.setCollisionByExclusion([-1]);
 
+        this.player_instance=new Player(this,400,200,'male_character','player1');
+        this.player_instance.setBounce(0.2);
+        this.player_instance.setCollideWorldBounds(true);
+        this.physics.add.collider(this.layer2,this.player_instance);
+        this.player_instance.anims.play('idle-right',true);
+
+
+        
+
         //input handling
         this.cursors=this.input.keyboard.createCursorKeys();
 
         
         //assigning each frame based on name in spritesheet
-        this.createAnimations();
+       
+        
+        // if(!this.startGame){
+        //     this.scene.pause('Office');
+            
+        //     console.log("paused");
+        //  }
+        // else if(this.startGame && this.scene.isPaused('Office')){
+        //     this.scene.resume('Office');
+        //     console.log("resumed");
+        // }
         
     }
     
     update(){
         const speed=60.5;
-       
+        
+        
+        // if(this.startGame && this.scene.isPaused('Office')){
+        //     this.scene.resume('Office');
+        //     console.log("resumed");
+        // }
         //changing velocity of player based on input
         let player_velocity=new Phaser.Math.Vector2();
+       
     
         if(!this.cursors.left.isDown && !this.cursors.right.isDown&& !this.cursors.up.isDown&& !this.cursors.down.isDown ){
             this.player_instance.anims.play('idle-right',true);
@@ -93,23 +125,23 @@ export class Office extends Scene
         player_velocity.normalize();
         player_velocity.scale(speed);
         this.player_instance.setVelocity(player_velocity.x,player_velocity.y);
-
+        // console.log(this.pos)
         this.pos.x=this.player_instance.x;
+        
         this.pos.y=this.player_instance.y;
-        // console.log(this.player_instance.x,this.player_instance.y);
-        // console.log(this.oldPos.x,this.oldPos.y);
+       
         if(this.pos.x!=this.oldPos.x|| this.pos.y!=this.oldPos.y){
             this.socket.emit("playerMovement",{
                 clientId:this.clientId,
                 x:this.pos.x,
                 y:this.pos.y,
-                vel:{x:this.vel.x,y:this.vel.y},
+                // vel:{x:this.vel.x,y:this.vel.y},
             });
             this.oldPos.x=this.pos.x;
             this.oldPos.y=this.pos.y;
             
         }
-        
+    
         
         ///if a person enters a certain boundary create another room for him
         //we should have 2 desks and a meeting room
@@ -119,20 +151,23 @@ export class Office extends Scene
 
     }
     setupSocketEvents(){
-        this.socket.emit('addMember',this.playerInfo.id);
+        this.socket.emit('addMember',this.playerInfo);
         this.socket.on('playerInfo',(data)=>{
-            const {clientId,x,y,vel}=data;
+            const {clientId,x,y,name}=data;
             this.clientId=clientId;
-            //console.log(clientId);
-            
+            this.playerNames[clientId]=this.add.text(x,y-16,name,{
+                fontFamily: 'Arial Black', fontSize: 10, color: '#000000',
+                stroke: '#ffffff', strokeThickness: 1,
+                align: 'center',
+                justify: 'center',
+            }).setOrigin(0.5).setDepth(100);
+            this.startGame=true;
             this.pos={x:x,y:y};
-            this.vel=vel;
-            this.player_instance=new Player(this,this.pos.x,this.pos.y,'male_character','player1');
-            console.log(this.player_instance);  
-            this.player_instance.setBounce(0.2);
-            this.player_instance.setCollideWorldBounds(true);
-            this.physics.add.collider(this.layer2,this.player_instance);
-            this.player_instance.anims.play('idle-right',true);
+            this.player_instance.x=this.pos.x;
+            this.player_instance.y=this.pos.y;   
+            
+            this.playerNames[clientId]=this.playerName;
+            
             EventBus.emit('current-scene-ready', this);
 
         });
@@ -140,14 +175,21 @@ export class Office extends Scene
             const clientId=data[0];
             const x=data[1];
             const y=data[2];
-            const vel=data[3];
+            const name=data[3];
             //console.log(data);
-            this.players[clientId]={//find out whose socket am i getting here
+            this.players[clientId]={
                 x:x,
                 y:y,
-                vel:{x:vel.x,y:vel.y},
+                name:name,
             }
-            
+
+            this.playerNames[clientId]=this.add.text(x,y-16,name,{
+                fontFamily: 'Arial Black', fontSize: 10, color: '#000000',
+                stroke: '#ffffff', strokeThickness: 1,
+                align: 'center',
+                justify: 'center',
+            }).setOrigin(0.5).setDepth(100);
+
             const player=this.physics.add.sprite(x,y,'male_character');
             player.anims.play('idle-right',true);
             this.physics.add.collider(this.layer2,player);
@@ -158,14 +200,22 @@ export class Office extends Scene
             //console.log(data);
             data.forEach(element => {
                 //console.log(element);
-                const {clientId,x,y,vel}=element;
+                const {clientId,x,y,name}=element;
                 const jsonData={
                      x:element.x,
                      y:element.y,
-                     vel:{x:vel.x,y:vel.y},
+                     name:element.name,
                 };
                 this.players[clientId]=jsonData;
-                   
+                  
+                this.playerNames[clientId]=this.add.text(x,y-16,name,{
+                    fontFamily: 'Arial Black', fontSize: 10, color: '#000000',
+                    stroke: '#ffffff', strokeThickness: 1,
+                    align: 'center',
+                    justify: 'center',
+                }).setOrigin(0.5).setDepth(100);
+
+
                 const player=this.physics.add.sprite(x,y,'male_character');
                 this.physics.add.collider(this.layer2,player);
                 player.anims.play('idle-right',true);
@@ -177,9 +227,10 @@ export class Office extends Scene
             const clientId=data.clientId;
             const x=data.x;
             const y=data.y;
-            const vel=data.vel;
+            
             if(this.players[clientId]){
                 const otherplayer=this.otherPlayers[clientId];
+                const otherPlayerName=this.playerNames[clientId];
                 
                 this.tweens.add({
                     targets:otherplayer,
@@ -195,8 +246,16 @@ export class Office extends Scene
                     //     otherplayer.anims.play('idle-left',true);
                     // }
                 })
+                this.tweens.add({
+                    targets:otherPlayerName,
+                    x:x,
+                    y:y-16,
+                    duration:1000,
+                    ease:'Linear'
+                })
             }
         });
+
         
 
     }
@@ -226,6 +285,15 @@ export class Office extends Scene
             frameRate:8,
             repeat:-1,
         })
+    }
+    createPlayer(){
+        let info;
+        
+        this.socket.on('playerInfo',(data)=>{
+            info=data;
+        })
+        console.log(info);
+        return info;
     }
 }
 
