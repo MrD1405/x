@@ -1,25 +1,30 @@
 import { HOST } from "@/utils/constants";
-import { createContext, useEffect, useRef , useContext} from "react";
+import { createContext, useEffect, useRef , useContext, useState} from "react";
 import { IoReturnUpBack } from "react-icons/io5";
 import { useAppStore } from "@/store";
 import {io,Socket} from "socket.io-client";
 
 const SocketContext = createContext(null);
 
-export const useSocket = ()=>{
-    return  useContext(SocketContext);
-};
+export const useSocket = () => {
+    const socket = useContext(SocketContext);
+    if (!socket) {
+      throw new Error('useSocket must be used within a SocketProvider');
+    }
+    return socket;
+  };
 
 export const SocketProvider = ({children}) => {
-    const socket = useRef();
+    const [socket,setSocket] = useState(null);
     const {userInfo} = useAppStore.getState();
     useEffect(()=>{
         if(userInfo){
-            socket.current = io(HOST,{
+            const newSocket = io(HOST,{
                 withCredentials: true,
                 query: {userId: userInfo.id},
             });
-            socket.current.on("connect",()=>{
+            setSocket(newSocket);
+            newSocket.on("connect",()=>{
                 console.log("Connected to socket server");
             });
 
@@ -41,17 +46,17 @@ export const SocketProvider = ({children}) => {
                 addChannelInChannelList(message);
             };
 
-            socket.current.on("recieveMessage", handleRecieveMessage);
-            socket.current.on("recieve-channel-message",handleRecieveChannelMessage);
+            newSocket.on("recieveMessage", handleRecieveMessage);
+            newSocket.on("recieve-channel-message",handleRecieveChannelMessage);
 
             return ()=> {
-                socket.current.disconnect();
+                newSocket.disconnect();
             }
         }
     },[userInfo]);
 
     return (
-        <SocketContext.Provider value={socket.current}>
+        <SocketContext.Provider value={socket}>
             {children}
         </SocketContext.Provider>
     )
