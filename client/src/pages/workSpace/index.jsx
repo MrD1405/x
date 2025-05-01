@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { IoPowerSharp, IoChatbubbles} from 'react-icons/io5';
 import { Button } from '@/components/ui/button';
 import { enableJoin } from '@/game/scenes/Office';
-import  setUpMedia ,{setUpPeerConnection} from '@/pages/calls/setUpMedia';
+import  setUpMedia ,{setUpPeerConnection} from '@/calls/setUpMedia';
 // import { use } from 'matter';
 
 const WorkSpace = () => {

@@ -107,7 +107,7 @@ const setupSocket = (server) => {
             const {x,y,vel}=getPlayerInfo();
             socket.join(roomId);
             socket.emit("playerInfo",{clientId,x,y,name:data.firstName});//to sender
-            socket.emit("allMembers",getPlayersData(roomId));//to sender
+            socket.emit("allMembers",getPlayersData(roomId,clientId));//to sender
     
             state[roomId].players.push({
                 clientId:clientId,
@@ -127,15 +127,22 @@ const setupSocket = (server) => {
             const {x,y,vel}= {x:Math.floor(200*(Math.random())+200),y:Math.floor(100*(Math.random())+100),vel:{x:0,y:0}};
             return {x,y,vel};
         }
-        function getPlayersData(roomId){
+        function getPlayersData(roomId,clientId){
 
-            if(state[roomId])return state[roomId].players;
+            if(state[roomId]){
+                const players_array=state[roomId].players;
+                    const player=players_array.find((player)=>player.clientId===clientId);
+                    if(player){
+                        players_array.splice(players_array.indexOf(player),1);
+                    }
+                return players_array;
+            }
         }
     })
-    io.of("player").on("disconnect", (socket)=>{
+    io.of("/player").on("disconnect", (socket)=>{
         socket.broadcast.emit('playerDisconnected', state[roomId].players);
     });
-    io.of("media").on("connection",(socket)=>{
+    io.of("/media").on("connection",(socket)=>{
         
     })
 };

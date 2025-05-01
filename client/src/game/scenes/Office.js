@@ -118,6 +118,7 @@ export class Office extends Scene
         this.pos.y=this.player_instance.y;
        
         if(this.pos.x!=this.oldPos.x|| this.pos.y!=this.oldPos.y){
+            //console.log("player is moving");
             this.socket.emit("playerMovement",{
                 clientId:this.clientId,
                 x:this.pos.x,
@@ -204,6 +205,7 @@ export class Office extends Scene
             data.forEach(element => {
                 //console.log(element);
                 const {clientId,x,y,name}=element;
+                
                 const jsonData={
                      x:element.x,
                      y:element.y,
@@ -230,11 +232,12 @@ export class Office extends Scene
             const clientId=data.clientId;
             const x=data.x;
             const y=data.y;
-            
+            const vel=data.vel;
+            console.log(data)
             if(this.players[clientId]){
                 const otherplayer=this.otherPlayers[clientId];
                 const otherPlayerName=this.playerNames[clientId];
-                console.log(otherPlayerName);
+                //console.log(otherPlayerName);
                 this.tweens.add({
                     targets:otherPlayerName,
                     x:x,
@@ -247,10 +250,10 @@ export class Office extends Scene
                     x:x,
                     y:y,
                     duration:1000,
-                   ease:'Linear',
+                    ease:'Linear',
                     onActive:()=>{
                         if(vel.x<0)otherplayer.anims.play('run-left',true);
-                        else otherplayer.anims.play('run-right',true);
+                        //else otherplayer.anims.play('run-right',true);
                     },
                     // onComplete:()=>{
                     //     otherplayer.anims.play('idle-left',true);
