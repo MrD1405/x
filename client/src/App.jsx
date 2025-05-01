@@ -8,6 +8,7 @@ import { apiClient } from "./lib/api-client";
 import { GET_USER_INFO } from "./utils/constants";
 import  Home from "./pages/home";
 import WorkSpace from "./pages/workSpace/index";
+import Meetings from "./pages/workSpace/meeting";
 
 let playerInfo;
 const PrivateRoute = ({children})=>{
@@ -73,6 +74,9 @@ const App = () => {
         </PrivateRoute>}/>
         <Route path="/workspace" element={<PrivateRoute>
           <WorkSpace />
+        </PrivateRoute>} />
+        <Route path="/meetings" element={<PrivateRoute>
+          <Meetings />
         </PrivateRoute>} />
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>

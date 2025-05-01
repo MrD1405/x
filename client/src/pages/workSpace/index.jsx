@@ -55,6 +55,7 @@ const WorkSpace = () => {
     
   },[enableJoin]);
   const handleJoinClick = async ()=>{
+    //Check on click event in join meeting button...
     setUpPeerConnection(callStatus.haveMedia,peerConnection,setPeerConnection,remoteStream,setRemoteStream);
   
   };
@@ -87,7 +88,14 @@ const WorkSpace = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="flex items-center justify-items-center">
-                  <Button className="invisible absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " ref={joinButtonRef} onClick = {handleJoinClick}>Join Meeting</Button>
+                  <Button className="invisible absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " ref={joinButtonRef} onClick = {()=>{handleJoinClick();navigate("/meetings",{
+                      state: {
+                      callStatus: callStatus,
+                      localStream: localStream,
+                      remoteStream: remoteStream,
+                      peerConnection: peerConnection,
+                      },
+                  });}}>Join Meeting</Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#1c1b1e] border-none text-white">
                     Join
