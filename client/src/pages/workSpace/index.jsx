@@ -96,6 +96,7 @@ const WorkSpace = () => {
                       peerConnection: peerConnection,
                       },
                   });}}>Join Meeting</Button>
+                  <Button className=" absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " ref={joinButtonRef} onClick = {handleJoinClick}>Join Meeting</Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#1c1b1e] border-none text-white">
                     Join
