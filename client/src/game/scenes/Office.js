@@ -117,7 +117,7 @@ export class Office extends Scene
         this.pos.y=this.player_instance.y;
        
         if(this.pos.x!=this.oldPos.x|| this.pos.y!=this.oldPos.y){
-            //console.log("player is moving");
+            console.log("player is moving");
             this.socket.emit("playerMovement",{
                 clientId:this.clientId,
                 x:this.pos.x,
