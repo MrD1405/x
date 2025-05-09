@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 import React from 'react'
-
-const setUpMedia = (setLocalStream)=>{
+//import {createPeerConnection} from './utils/createPeerConnection';
+const setUpMedia = (localStream,setLocalStream)=>{
     return new Promise(async(resolve, reject)=>{
         
         const constraints = {
@@ -14,8 +14,11 @@ const setUpMedia = (setLocalStream)=>{
         }
         try{
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            setLocalStream(stream)
-            resolve()
+            console.log(stream);
+            localStream=stream;
+            
+           
+            resolve();
         }catch(err){
             console.log(err);
             reject(err)

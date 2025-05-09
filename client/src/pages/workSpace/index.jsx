@@ -35,33 +35,10 @@ const WorkSpace = () => {
       console.log(error);
     }
   };
-  function joinHandleClick(){
-      
-      navigate("/meeting");
-  }
-    
 
-
-  // useEffect(()=>{
-    
-  //   setUserName(userInfo.firstName);
-  //   joinButtonRef.current.classList.remove("invisible");
-  //   if(!enableJoin){
-  //     joinButtonRef.current.classList.add("invisible");
-  //   }
-    
-  // },[enableJoin]);
-  
-  // if(enableJoin){
-  //   setUserName(userInfo.firstName);
-  //   joinButtonRef.current.classList.remove("invisible");
-  //   if(!enableJoin){
-  //     joinButtonRef.current.classList.add("invisible");
-  //   }
-  // }
   const handleJoinClick = async ()=>{
-    navigate("/meeting");
-    setUpPeerConnection(callStatus.haveMedia,peerConnection,setPeerConnection,remoteStream,setRemoteStream);
+    navigate("/meetings");
+    //setUpPeerConnection(callStatus.haveMedia,peerConnection,setPeerConnection,remoteStream,setRemoteStream);
     
   };
 

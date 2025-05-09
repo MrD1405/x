@@ -10,7 +10,17 @@ const state={
         ]
     }
 };
-const meetingRoomAlpha={};
+const meetingRoomAlpha={
+    offerer:null,
+    offererUserName:null,
+    offer:null,
+    offerIceCandidates:null,
+    answerer:null,
+    answererUserName:null,
+    answer:null,
+    answererIceCandidates:null
+
+};
 const players={};
 const offers = [
     // offererUserName
@@ -169,58 +179,19 @@ const setupSocket = (server) => {
     io.of("/player").on("disconnect", (socket)=>{
         socket.broadcast.emit('playerDisconnected', state[roomId].players);
     });
-    io.of("/media").on("connection",(socket)=>{
+    io.of("/signalingserver").on("connection",(socket)=>{
         //a new client has joined. If there are any offers available,
         //emit them out
-        if(offers.length){
-            socket.emit('availableOffers',offers);
-        }
+        socket.on("iceCandidate",(data)=>{
+            const { iceCandidate,userName,amIOffering}=data;
+            if(amIOffering){
+                
+            }
+        })
         
-        socket.on('newOffer',newOffer=>{
-            console.log("newOffer!")
-            // console.log(newOffer)
-            offers.push({
-                offererUserName: userName,
-                offer: newOffer,
-                offerIceCandidates: [],
-                answererUserName: null,
-                answer: null,
-                answererIceCandidates: []
-            })
-            // console.log(newOffer.sdp.slice(50))
-            //send out to all connected sockets EXCEPT the caller
-            console.log("Emmiting newOfferAwaiting")
-            socket.broadcast.emit('newOfferAwaiting',offers.slice(-1))
-        })
+        
 
-        socket.on('newAnswer',(offerObj,ackFunction)=>{
-            // console.log(offerObj);
-            console.log(connectedSockets)
-            console.log("Requested offerer",offerObj.offererUserName)
-            //emit this answer (offerObj) back to CLIENT1
-            //in order to do that, we need CLIENT1's socketid
-            const socketToAnswer = connectedSockets.find(s=>s.userName === offerObj.offererUserName)
-            if(!socketToAnswer){
-                console.log("No matching socket")
-                return;
-            }
-            //we found the matching socket, so we can emit to it!
-            const socketIdToAnswer = socketToAnswer.socketId;
-            //we find the offer to update so we can emit it
-            const offerToUpdate = offers.find(o=>o.offererUserName === offerObj.offererUserName)
-            if(!offerToUpdate){
-                console.log("No OfferToUpdate")
-                return;
-            }
-            //send back to the answerer all the iceCandidates we have already collected
-            ackFunction(offerToUpdate.offerIceCandidates);
-            offerToUpdate.answer = offerObj.answer
-            offerToUpdate.answererUserName = userName
-            //socket has a .to() which allows emiting to a "room"
-            //every socket has it's own room
-            console.log(socketIdToAnswer)
-            socket.to(socketIdToAnswer).emit('answerResponse',offerToUpdate)
-        })
+        
 
         socket.on('sendIceCandidateToSignalingServer',iceCandidateObj=>{
             const { didIOffer, iceUserName, iceCandidate } = iceCandidateObj;
