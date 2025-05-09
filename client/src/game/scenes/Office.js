@@ -6,8 +6,7 @@ import { io } from 'socket.io-client';
 import { playerInfo } from '@/App';
 
 
-let enableJoin=false;
-export {enableJoin};
+
 export class Office extends Scene
 {
     cursors;
@@ -131,11 +130,15 @@ export class Office extends Scene
         }
     
         if((this.player_instance.x>200)&& this.player_instance.x<300 && this.player_instance.y>100 && this.player_instance.y<200){
-           if(!enableJoin)enableJoin=true;
-            //this.socket.emit('createRoom',this.clientId);
+            // console.log("in joining space");
+            this.socket.emitWithAck('joinMeetingRoom',this.clientId)
+            .then((data)=>{
+                console.log(data)  
+            })
         }
         else{
-            enableJoin=false;
+            this.socket.emit('leaveMeetingRoom',this.playerInfo);
+            
         }
 
 
@@ -307,6 +310,8 @@ export class Office extends Scene
 function handleCollision(player_instance,player){
     console.log(player_instance.clientId);
 }
+
+
 
 
 

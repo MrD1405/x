@@ -10,6 +10,7 @@ import  Home from "./pages/home";
 import WorkSpace from "./pages/workSpace/index";
 import Meetings from "./pages/workSpace/meeting";
 
+import MeetingSpace from "./pages/workSpace/meetingSpace";
 let playerInfo;
 const PrivateRoute = ({children})=>{
   const {userInfo} = useAppStore();
@@ -78,6 +79,15 @@ const App = () => {
         <Route path="/meetings" element={<PrivateRoute>
           <Meetings />
         </PrivateRoute>} />
+        <Route path="/meeting" element={<PrivateRoute>
+          <MeetingSpace />
+        </PrivateRoute>} />
+        {/* <Route path="/offer" element={<PrivateRoute>
+          <MeetingSpace />
+        </PrivateRoute>} />
+        <Route path="/answer" element={<PrivateRoute>
+          <Answer />
+        </PrivateRoute>} /> */}
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>
     </BrowserRouter>

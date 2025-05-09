@@ -8,24 +8,21 @@ import { useAppStore } from '@/store';
 import { useNavigate } from 'react-router-dom';
 import { IoPowerSharp, IoChatbubbles} from 'react-icons/io5';
 import { Button } from '@/components/ui/button';
-import { enableJoin } from '@/game/scenes/Office';
+
+//import { toBeEnabled } from '@/game/scenes/Office';
 import  setUpMedia ,{setUpPeerConnection} from '@/calls/setUpMedia';
 // import { use } from 'matter';
 
 const WorkSpace = () => {
 
-  const [ callStatus, updateCallStatus ] = useState({})
-  const [ localStream, setLocalStream ] = useState(null)
-  const [ remoteStream, setRemoteStream ] = useState(null)
-  const [ peerConnection, setPeerConnection ] = useState(null)
-  const [ userName, setUserName ] = useState("")
-  const [ offerData, setOfferData ] = useState(null)
+  
   const {userInfo,setUserInfo} = useAppStore();
+  
   // console.log(userInfo);
   
 
   const navigate = useNavigate();
-  const joinButtonRef=useRef(null);
+  //const joinButtonRef=useRef(null);
   const logOut = async ()=>{
     try{
       const response = await apiClient.post(LOGOUT_ROUTE,{},{withCredentials:true});
@@ -38,32 +35,40 @@ const WorkSpace = () => {
       console.log(error);
     }
   };
-  useEffect(()=>{
-    async function settingUp(){
-      await setUpMedia(callStatus,updateCallStatus,setLocalStream);
-    }
-    settingUp();
-  },[userName]);
+  function joinHandleClick(){
+      
+      navigate("/meeting");
+  }
+    
 
-  useEffect(()=>{
+
+  // useEffect(()=>{
     
-    setUserName(userInfo.firstName);
-    joinButtonRef.current.classList.remove("invisible");
-    if(!enableJoin){
-      joinButtonRef.current.classList.add("invisible");
-    }
+  //   setUserName(userInfo.firstName);
+  //   joinButtonRef.current.classList.remove("invisible");
+  //   if(!enableJoin){
+  //     joinButtonRef.current.classList.add("invisible");
+  //   }
     
-  },[enableJoin]);
-  const handleJoinClick = async ()=>{
-    //Check on click event in join meeting button...
-    setUpPeerConnection(callStatus.haveMedia,peerConnection,setPeerConnection,remoteStream,setRemoteStream);
+  // },[enableJoin]);
   
+  // if(enableJoin){
+  //   setUserName(userInfo.firstName);
+  //   joinButtonRef.current.classList.remove("invisible");
+  //   if(!enableJoin){
+  //     joinButtonRef.current.classList.add("invisible");
+  //   }
+  // }
+  const handleJoinClick = async ()=>{
+    navigate("/meeting");
+    setUpPeerConnection(callStatus.haveMedia,peerConnection,setPeerConnection,remoteStream,setRemoteStream);
+    
   };
 
   return (
     <div className="bg-[#1b1c24] h-[100vh] flex items-center justify-center flex-col gap-10"> 
       <div>
-        <PhaserGame />
+        <PhaserGame  />
       </div>
       <div className="absolute bottom-0 h-16 flex flex-row items-center justify-between px-10 w-full bg-[#2a2b33]">
         <div className="flex items-center justify-center">
@@ -88,14 +93,7 @@ const WorkSpace = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger className="flex items-center justify-items-center">
-                  <Button className="invisible absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " ref={joinButtonRef} onClick = {()=>{handleJoinClick();navigate("/meetings",{
-                      state: {
-                      callStatus: callStatus,
-                      localStream: localStream,
-                      remoteStream: remoteStream,
-                      peerConnection: peerConnection,
-                      },
-                  });}}>Join Meeting</Button>
+                  <Button className="absolute ml-3 text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 "  onClick = {handleJoinClick}>Join Meeting</Button>
                 </TooltipTrigger>
                 <TooltipContent className="bg-[#1c1b1e] border-none text-white">
                     Join
@@ -125,5 +123,6 @@ const WorkSpace = () => {
     </div>
   )
 }
+
 
 export default WorkSpace;
