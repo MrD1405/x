@@ -17,6 +17,7 @@ const WorkSpace = () => {
 
   
   const {userInfo,setUserInfo} = useAppStore();
+  const [noOfActiveUsers,setNoOfActiveUsers]=useState(0);
   
   // console.log(userInfo);
   

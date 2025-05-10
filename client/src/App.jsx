@@ -82,12 +82,7 @@ const App = () => {
         <Route path="/meeting" element={<PrivateRoute>
           <MeetingSpace />
         </PrivateRoute>} />
-        {/* <Route path="/offer" element={<PrivateRoute>
-          <MeetingSpace />
-        </PrivateRoute>} />
-        <Route path="/answer" element={<PrivateRoute>
-          <Answer />
-        </PrivateRoute>} /> */}
+        
         <Route path="*" element={<Navigate to="/auth" />} />
       </Routes>
     </BrowserRouter>

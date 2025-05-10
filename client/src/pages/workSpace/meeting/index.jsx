@@ -42,37 +42,49 @@ const Meetings = () => {
         setVideoOn(!isVideoOn);
     };
     useEffect(()=>{
-        setMedia();
-        setUpLocalStream(localStream);
-        setRTCConnection();  
-        
+        setMedia().then(()=>{
+            setUpLocalVideoSetup(localStream);
+            setRTCConnection();  
+        });
         //setUpPeerConnection(peerConnection,setPeerConnection,remoteStream,setRemoteStream);
         
     },[])
-    function setUpLocalStream(stream){
-        console.log("local stream",stream);
-        localVideoRef.current.srcObject=stream;
-        localVideoRef.current.autoplay = true;
-        localVideoRef.current.muted = true;
+    function setUpLocalVideoSetup(){
+        console.log("local stream",localStream);
+        if(localStream){
+            localVideoRef.current.srcObject=localStream;
+            localVideoRef.current.autoplay = true;
+            localVideoRef.current.muted = true;
+        }
     }
     function setRTCConnection(){
-        mediaio=io.connect("http://localhost:8747/signalingserver");
+        mediaio=io.connect("http://localhost:8747/signalingserver",{
+            auth:{
+                userName:userInfo.firstName,
+            }
+        });
         
-        mediaio.on("existingOffers",(data)=>{
+        mediaio.on("existingOffer",(data)=>{
            if(data){
-            establishPeerConnection();
+             establishPeerConnection();
             peerConnection.setRemoteDescription(data.offer);
             setAmIOffering(false);
             //add tracks to remoteVideo here
-            peer.createAnswer().then((answer)=>{
-                peer.setLocalDescription(answer);
-                const offererIceCandidate=mediaio.emitwithAck("answer",{
+            peerConnection.createAnswer().then((answer)=>{
+                peerConnection.setLocalDescription(answer);
+                mediaio.emit("answer",{
                     answer,
                     answererUserName:userInfo.firstName,
-                    amIOffering:amIOffering,
+                    
                 });
+                let offererIceCandidate;
+                mediaio.on("receiveOffererIceCandidates",()=>{
+                    offererIceCandidate=data;
+                })
+                
+                console.log(offererIceCandidate);
                 offererIceCandidate.forEach((iceCandidate)=>{
-                    peer.addIce
+                    peerConnection.addIceCandidate(iceCandidate)
                 })
             })
             
@@ -82,14 +94,16 @@ const Meetings = () => {
         if(amIOffering){
             establishPeerConnection();
             
-            localStream.getTracks().forEach((track)=>{
-                peerConnection.addTrack(track,localStream);
-            })
+            if(localStream){
+                localStream.getTracks().forEach((track)=>{
+                    peerConnection.addTrack(track,localStream);
+                })
+            }
             peerConnection.createOffer().then((offer)=>{
                 peerConnection.setLocalDescription(offer);
                 mediaio.emit("offer",{
                     offer:offer,
-                    offererUserName:userInfo.first
+                    offererUserName:userInfo.firstName,
                 });
             })
         }
@@ -97,46 +111,48 @@ const Meetings = () => {
 
     }
     function establishPeerConnection(){
-        const peer=new RTCPeerConnection({
-            peerConfiguration
-        })
-        setPeerConnection(peer);
-        peer.onicecandidate=(event)=>{
-            if(event.candidate){
-                console.log("ice candidate",event.candidate);
-                mediaio.emit("iceCandidate",{
-                    candidate:event.candidate,
-                    userName:userInfo.firstName,
-                    amIOffering:amIOffering
-                });
+        // return new Promise(async(resolve,reject)=>{ 
+            const peer=new RTCPeerConnection({
+                peerConfiguration
+            })
+            setPeerConnection(peer);
+            peer.onicecandidate=(event)=>{
+                if(event.candidate){
+                    mediaio.emit("iceCandidate",{
+                        candidate:event.candidate,
+                        userName:userInfo.firstName,
+                        amIOffering:amIOffering
+                    });
+                }
             }
-        }
-        peer.ontrack=(event)=>{
-            console.log("remote stream",event.streams[0]);
-            setRemoteStream(event.streams[0]);
-            remoteVideoRef.current.srcObject=event.streams[0];
-        }
+            peer.ontrack=(event)=>{
+                console.log("remote stream",event.streams[0]);
+                setRemoteStream(event.streams[0]);
+                remoteVideoRef.current.srcObject=event.streams[0];
+            }
+            // resolve();
+        // })
         
     }
     async function setMedia(){
-         
-        const constraints = {
-            video:{
-                width:{ideal:1280},
-                height:{ideal:720},
-                frameRate:{ideal:30,max:60}
-            },
-            audio:true, 
-        }
-        try{
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            console.log(stream);
-            setLocalStream(stream);
-            
-        }catch(err){
-            console.log(err);
-            
-        }
+        return new Promise(async(resolve,reject)=>{ 
+            const constraints = {
+                video:{
+                    width:{ideal:1280},
+                    height:{ideal:720},
+                    frameRate:{ideal:30,max:60}
+                },
+                audio:true, 
+            }
+            try{
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                setLocalStream(stream);
+                resolve();
+            }catch(err){
+                console.log(err);
+                reject(err);
+            }
+        })
     }
     useEffect(()=>{
         console.log("local stream",localStream);

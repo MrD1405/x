@@ -10,29 +10,24 @@ const state={
         ]
     }
 };
-const meetingRoomAlpha={
-    offerer:null,
-    offererUserName:null,
-    offer:null,
-    offerIceCandidates:null,
-    answerer:null,
-    answererUserName:null,
-    answer:null,
-    answererIceCandidates:null
+const meetingRoom={
+    offerer:{
+        offererUserName:null,
+        offer:null,
+        offerIceCandidates:[],
+    },
+    answerer:{
+        answererUserName:null,
+        answer:null,
+        answererIceCandidates:[]
+    }
 
 };
 const players={};
-const offers = [
-    // offererUserName
-    // offer
-    // offerIceCandidates
-    // answererUserName
-    // answer
-    // answererIceCandidates
-];
-const connectedSockets = [
+
+const connectedSockets = {
     //username, socketId
-]
+}
 const setupSocket = (server) => {
     const io = new SocketIoServer(server,{
         cors:{
@@ -179,58 +174,73 @@ const setupSocket = (server) => {
     io.of("/player").on("disconnect", (socket)=>{
         socket.broadcast.emit('playerDisconnected', state[roomId].players);
     });
+    
     io.of("/signalingserver").on("connection",(socket)=>{
         //a new client has joined. If there are any offers available,
         //emit them out
+        const userName=socket.handshake.query.userName;
+        connectedSockets[userName]=socket.id;
+        if(meetingRoom.offerer.offererUserName){
+            socket.emit('existingOffer',{
+                offer:meetingRoom.offerer.offer,
+                offerIceCandidates:meetingRoom.offerer.offerIceCandidates,
+                offererUserName:meetingRoom.offerer.offererUserName,
+            })
+        }
+        socket.on('offer',(data)=>{
+            const {offer,offererUserName}=data;
+            meetingRoom.offerer.offer=offer;
+            meetingRoom.offerer.offererUserName=offererUserName;
+            socket.emit('existingOffer',{
+                offer:meetingRoom.offerer.offer,
+                offerIceCandidates:meetingRoom.offerer.offerIceCandidates,
+                offererUserName:meetingRoom.offerer.offererUserName,
+            })
+        });
+        socket.on('answer',(data,resolve)=>{
+            const {answer,answererUserName}=data;
+            meetingRoom.answerer.answer=answer;
+            meetingRoom.answerer.answererUserName=answererUserName;
+            socket.emit("receiveOffererIceCandidates",(meetingRoom.offerer.offerIceCandidates));
+            
+        });
         socket.on("iceCandidate",(data)=>{
             const { iceCandidate,userName,amIOffering}=data;
             if(amIOffering){
                 
-            }
-        })
-        
-        
-
-        
-
-        socket.on('sendIceCandidateToSignalingServer',iceCandidateObj=>{
-            const { didIOffer, iceUserName, iceCandidate } = iceCandidateObj;
-            // console.log(iceCandidate);
-            if(didIOffer){
-                //this ice is coming from the offerer. Send to the answerer
-                const offerInOffers = offers.find(o=>o.offererUserName === iceUserName);
-                if(offerInOffers){
-                    offerInOffers.offerIceCandidates.push(iceCandidate)
-                    // 1. When the answerer answers, all existing ice candidates are sent
-                    // 2. Any candidates that come in after the offer has been answered, will be passed through
-                    if(offerInOffers.answererUserName){
-                        //pass it through to the other socket
-                        const socketToSendTo = connectedSockets.find(s=>s.userName === offerInOffers.answererUserName);
-                        if(socketToSendTo){
-                            socket.to(socketToSendTo.socketId).emit('receivedIceCandidateFromServer',iceCandidate)
-                        }else{
-                            console.log("Ice candidate recieved but could not find answere")
-                        }
+                if(meetingRoom.offerer.offererUserName===userName){
+                    meetingRoom.offerer.offerIceCandidates.push(iceCandidate);
+                    const socketToSendTo=connectedSockets[meetingRoom.answerer.answererUserName];
+                    if(socketToSendTo){
+                        socket.to(socketToSendTo).emit('receiveIceCandidateFromServer',iceCandidate);
                     }
                 }
-            }else{
-                //this ice is coming from the answerer. Send to the offerer
-                //pass it through to the other socket
-                const offerInOffers = offers.find(o=>o.answererUserName === iceUserName);
-                const socketToSendTo = connectedSockets.find(s=>s.userName === offerInOffers.offererUserName);
-                if(socketToSendTo){
-                    socket.to(socketToSendTo.socketId).emit('receivedIceCandidateFromServer',iceCandidate)
-                }else{
-                    console.log("Ice candidate recieved but could not find offerer")
+            }
+            else{
+                if(meetingRoom.answerer.answererUserName===userName){
+                    meetingRoom.answerer.answererIceCandidates.push(iceCandidate);
+                    const socketToSendTo=connectedSockets[meetingRoom.offerer.offererUserName];
+                    if(socketToSendTo){
+                        socket.to(socketToSendTo).emit('receiveIceCandidateFromServer',iceCandidate);
+                    }
                 }
             }
-            // console.log(offers)
         })
-
+        
+         
         socket.on('disconnect',()=>{
-            const offerToClear = offers.findIndex(o=>o.offererUserName === userName)
-            offers.splice(offerToClear,1)
-            socket.emit('availableOffers',offers);
+            if(meetingRoom.offerer.offererUserName===userName){
+                meetingRoom.offerer.offererUserName=null;
+                meetingRoom.offerer.offer=null;
+                meetingRoom.offerer.offerIceCandidates=[];
+            }
+            if(meetingRoom.answerer.answererUserName===userName){
+                meetingRoom.answerer.answererUserName=null;
+                meetingRoom.answerer.answer=null;
+                meetingRoom.answerer.answerIceCandidates=[];
+            }
+            delete connectedSockets[userName];
+            console.log("user disconnected");
         })
     })
 };
