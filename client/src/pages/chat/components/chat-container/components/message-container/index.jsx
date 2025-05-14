@@ -129,7 +129,7 @@ const MessageContainer = () => {
     };
 
     const renderChannelMessages = (message) => {
-        return (<div className={`mt-5 ${message.sender._id !== userInfo._id? "text-left" : "text-right"}`}>
+        return (<div className={`mt-5 ${message.sender_id !== userInfo._id? "items-start" : "items-end"}`}>
             { message.messageType === "text" && 
                 (<div className={`${message.sender_id === userInfo.id ? "bg-[#8417ff]/5 text-[#8417ff]/90 border-[#8417ff]/50" : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"} border inline-block p-4 rounded my-1 max-w-[50%] break-words ml-9`}>
                     {message.content}
@@ -170,7 +170,7 @@ const MessageContainer = () => {
                     </AvatarFallback>
                     
                     </Avatar> 
-                    <span className="text-sm text-white/60">{`${message.snder.firstName} ${message.sender.lastName}`}</span>
+                    <span className="text-sm text-white/60">{`${message.sender.firstName} ${message.sender.lastName}`}</span>
                     <span className="text-sm text-white/60" mt-1>{moment(message.timestamp).format("LT")}
                     </span>
                 </div>) : (<div className="text-sm text-white/60" mt-1>{moment(message.timestamp).format("LT")}

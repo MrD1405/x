@@ -42,7 +42,7 @@ const CreateChannel = () => {
             }
 
         }catch(error){
-
+            console.log(error)
         }
     };
 
@@ -85,7 +85,7 @@ const CreateChannel = () => {
                     <div className="flex flex-col gap-5">
                         {
                             searchedContacts.map((contact) => {
-                                (<div className="flex gap-3 items-center  cursor-pointer" key={contact.id} onClick={()=>selectNewContact(contact)}>
+                                (<div className="flex gap-3 items-center  cursor-pointer" key={contact.id} onClick={()=>{selectedContacts.push(contact),setSelectedContacts(selectedContacts)}}>
                                     <div className="w-12 h-12 relative">
                                     <Avatar className="h-12 w-12 rounded-full overflow-hidden">
                                         {

@@ -40,7 +40,11 @@ const Meetings = () => {
     const handleVideoClick = async ()=>{
         //Add more functionality about video on and off
         setVideoOn(!isVideoOn);
-    
+        if(isVideoOn){
+            localVideoRef.current.srcObject = null;
+        }else{
+            localVideoRef.current.srcObject=localStream;
+        }
     };
     useEffect(()=>{
         setMedia().then(()=>{
