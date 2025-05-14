@@ -5,9 +5,14 @@ import Channel from "./models/ChannelModel.js";
 const roomId='EYYfy';
 const state={
     'EYYfy':{
-        players:[
-          
-        ]
+        players:{
+          'xyz':{
+            clientId:'xyz',
+            x:400,
+            y:300,
+            name:'player1',
+          }
+        }
     }
 };
 const meetingRoom={
@@ -113,60 +118,64 @@ const setupSocket = (server) => {
     io.of("/player").on("connection",(socket)=>{
         socket.on("addMember",(data)=>{
             if(data===undefined)return;
-            if(state[roomId].players.find((player)=>player.clientId===data.id)){
-                const player=state[roomId].players.find((player)=>player.clientId===data.id);
+            if(state[roomId].players[data.id]){
+                const player=state[roomId].players[data.id];
                 socket.emit('playerInfo',{clientId:player.clientId,x:player.x,y:player.y,name:data.firstName});
-                socket.emit("allMembers",getPlayersData(roomId));
+                socket.emit("allMembers",getPlayersData(roomId,data.id));
             }
             else{
-            console.log(data);
-            const clientId=data.id;
-            const {x,y,vel}=getPlayerInfo();
-            socket.join(roomId);
-            socket.emit("playerInfo",{clientId,x,y,name:data.firstName});//to sender
-            socket.emit("allMembers",getPlayersData(roomId,clientId));//to sender
-    
-            state[roomId].players.push({
-                clientId:clientId,
-                x:x,
-                y:y,
-                name:data.firstName,
-            })
-            socket.to(roomId).emit("newMember",[clientId,x,y,data.firstName]);// to all already present in the server except the sender
+                // console.log(data);
+                const clientId=data.id;
+                const {x,y,vel}=getPlayerInfo();
+                socket.join(roomId);
+                socket.emit("playerInfo",{clientId,x,y,name:data.firstName});//to sender
+                socket.emit("allMembers",getPlayersData(roomId,clientId));//to sender
+        
+                state[roomId].players[clientId]={
+                    clientId:clientId,
+                    x:x,
+                    y:y,
+                    name:data.firstName,
+                }
+                socket.broadcast.emit("newMember",{clientId:clientId,x:x,y:y,name:data.firstName});// to all already present in the server except the sender
             }
         })
         
         socket.on("playerMovement",(data)=>{
-            console.log(data);
-            socket.to(roomId).emit("otherPlayerMovement",data);
+            //console.log(data);
+            socket.broadcast.emit("otherPlayerMovement",data);
         })
 
-        socket.on("joinMeetingRoom",(data,callback)=>{
-            const clientId=data.id;
-            const userName=data.firstName;
-            meetingRoomAlpha[clientId]={
-                userName:userName,
-            }
-            const noOfUsers=Object.keys(meetingRoomAlpha).length;
-            callback(noOfUsers);
+        // socket.on("joinMeetingRoom",(data,callback)=>{
+        //     const clientId=data.id;
+        //     const userName=data.firstName;
+        //     meetingRoomAlpha[clientId]={
+        //         userName:userName,
+        //     }
+        //     const noOfUsers=Object.keys(meetingRoomAlpha).length;
+        //     callback(noOfUsers);
             
-        })
-        socket.on("leaveMeetingRoom",(data)=>{
-            const {clientId}=data.id;
-            delete meetingRoomAlpha[clientId];
-        })
+        // })
+        // socket.on("leaveMeetingRoom",(data)=>{
+        //     const {clientId}=data.id;
+        //     delete meetingRoom[clientId];
+        // })
         function getPlayerInfo(){
             const {x,y,vel}= {x:Math.floor(200*(Math.random())+200),y:Math.floor(100*(Math.random())+100),vel:{x:0,y:0}};
             return {x,y,vel};
         }
         function getPlayersData(roomId,clientId){
-
+            if(!state[roomId])return {};
             if(state[roomId]){
-                const players_array=state[roomId].players;
-                    const player=players_array.find((player)=>player.clientId===clientId);
-                    if(player){
-                        players_array.splice(players_array.indexOf(player),1);
+                const players_map=state[roomId].players;
+                const players_array=[];
+                console.log("players_map-",players_map);
+                for(const [id,player] of Object.entries(players_map)){
+                    if(id!==clientId){
+                        players_array.push(player)
                     }
+                }
+                console.log(players_array);
                 return players_array;
             }
         }
@@ -176,28 +185,24 @@ const setupSocket = (server) => {
     });
     
     io.of("/signalingserver").on("connection",(socket)=>{
-        //a new client has joined. If there are any offers available,
-        //emit them out
+        
         const userName=socket.handshake.query.userName;
         connectedSockets[userName]=socket.id;
-        if(meetingRoom.offerer.offererUserName){
+        socket.on('amIOffering',()=>{
             socket.emit('existingOffer',{
                 offer:meetingRoom.offerer.offer,
                 offerIceCandidates:meetingRoom.offerer.offerIceCandidates,
                 offererUserName:meetingRoom.offerer.offererUserName,
             })
-        }
+        })
+        
         socket.on('offer',(data)=>{
             const {offer,offererUserName}=data;
             meetingRoom.offerer.offer=offer;
             meetingRoom.offerer.offererUserName=offererUserName;
-            socket.emit('existingOffer',{
-                offer:meetingRoom.offerer.offer,
-                offerIceCandidates:meetingRoom.offerer.offerIceCandidates,
-                offererUserName:meetingRoom.offerer.offererUserName,
-            })
+
         });
-        socket.on('answer',(data,resolve)=>{
+        socket.on('answer',(data)=>{
             const {answer,answererUserName}=data;
             meetingRoom.answerer.answer=answer;
             meetingRoom.answerer.answererUserName=answererUserName;
@@ -242,6 +247,21 @@ const setupSocket = (server) => {
             delete connectedSockets[userName];
             console.log("user disconnected");
         })
+    })
+    io.of("/signalingserver").on("disconnect",(socket)=>{
+        const userName=socket.handshake.query.userName;
+        if(meetingRoom.offerer.offererUserName===userName){
+            meetingRoom.offerer.offererUserName=null;
+            meetingRoom.offerer.offer=null;
+            meetingRoom.offerer.offerIceCandidates=[];
+        }
+        if(meetingRoom.answerer.answererUserName===userName){
+            meetingRoom.answerer.answererUserName=null;
+            meetingRoom.answerer.answer=null;
+            meetingRoom.answerer.answerIceCandidates=[];
+        }
+        delete connectedSockets[userName];
+        console.log("user disconnected");
     })
 };
 

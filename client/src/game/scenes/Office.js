@@ -41,6 +41,16 @@ export class Office extends Scene
     initializeSocket(){
         this.socket=io('http://localhost:8747/player');
     }
+    showTextMovement(textObject,player_instance){
+        // console.log("textObject",textObject);
+        this.tweens.add({
+            targets:textObject,
+            x:player_instance.x,
+            y:player_instance.y-16,
+            ease:'Linear',
+            duration:2,
+        })
+    }
     create ()
     {
         this.playerInfo=playerInfo;
@@ -117,7 +127,7 @@ export class Office extends Scene
         this.pos.y=this.player_instance.y;
        
         if(this.pos.x!=this.oldPos.x|| this.pos.y!=this.oldPos.y){
-            console.log("player is moving");
+            //console.log("player is moving");
             this.socket.emit("playerMovement",{
                 clientId:this.clientId,
                 x:this.pos.x,
@@ -141,14 +151,16 @@ export class Office extends Scene
             
         }
 
-
-        this.tweens.add({
-            targets:this.playerNames[this.clientId],
-            x:this.pos.x,
-            y:this.pos.y-16,
-            ease:'Linear',
-            duration:2,
-        })
+        // console.log("here it is",this.playerNames[this.clientId]);
+        // console.log(this.playerNames);
+        this.showTextMovement(this.playerNames[this.clientId],this.player_instance);
+        // this.tweens.add({
+        //     targets:this.playerNames[this.clientId],
+        //     x:this.player_instance.x,
+        //     y:this.player_instance.y-16,
+        //     ease:'Linear',
+        //     duration:2,
+        // })
         ///if a person enters a certain boundary create another room for him
         //we should have 2 desks and a meeting room
         //create whiteboard
@@ -156,33 +168,34 @@ export class Office extends Scene
         
 
     }
+    
     setupSocketEvents(){
         this.socket.emit('addMember',this.playerInfo);
         this.socket.on('playerInfo',(data)=>{
             const {clientId,x,y,name}=data;
             this.clientId=clientId;
-            this.playerNames[clientId]=this.add.text(x,y-16,name,{
+            
+            let textObject=this.add.text(x,y-16,name,{
                 fontFamily: 'Arial Black', fontSize: 10, color: '#000000',
                 stroke: '#ffffff', strokeThickness: 1,
                 align: 'center',
                 justify: 'center',
-            }).setOrigin(0.5).setDepth(100);
-            
+            }).setOrigin(0.5);
+            // console.log(textObject);
+            this.playerNames[this.clientId]=textObject;
             this.startGame=true;
             this.pos={x:x,y:y};
             this.player_instance.x=this.pos.x;
             this.player_instance.y=this.pos.y;   
             
-            this.playerNames[clientId]=this.playerName;
+            this.playerName=name;
+            
             
             EventBus.emit('current-scene-ready', this);
 
         });
         this.socket.on("newMember",(data)=>{
-            const clientId=data[0];
-            const x=data[1];
-            const y=data[2];
-            const name=data[3];
+            const {clientId,x,y,name}=data;
             //console.log(data);
             this.players[clientId]={
                 x:x,
@@ -204,7 +217,7 @@ export class Office extends Scene
             this.otherPlayers[clientId]=player;
         });
         this.socket.on("allMembers",(data)=>{
-            //console.log(data);
+            console.log(data);
             data.forEach(element => {
                 //console.log(element);
                 const {clientId,x,y,name}=element;
@@ -236,8 +249,8 @@ export class Office extends Scene
             const x=data.x;
             const y=data.y;
             const vel=data.vel;
-            console.log(data)
-            if(this.players[clientId]){
+            //console.log("otherPlayerMovement",data);
+            if(this.otherPlayers[clientId]){
                 const otherplayer=this.otherPlayers[clientId];
                 const otherPlayerName=this.playerNames[clientId];
                 //console.log(otherPlayerName);
@@ -255,12 +268,12 @@ export class Office extends Scene
                     duration:1000,
                     ease:'Linear',
                     onActive:()=>{
-                        if(vel.x<0)otherplayer.anims.play('run-left',true);
+                        otherplayer.anims.play('run-right',true);
                         //else otherplayer.anims.play('run-right',true);
                     },
-                    // onComplete:()=>{
-                    //     otherplayer.anims.play('idle-left',true);
-                    // }
+                    onComplete:()=>{
+                        otherplayer.anims.play('idle-right',true);
+                    }
                 });
                 
             }

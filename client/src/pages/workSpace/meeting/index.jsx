@@ -21,7 +21,7 @@ const Meetings = () => {
     const [localStream,setLocalStream] = useState(null);
     const [remoteStream,setRemoteStream]=useState(null);
     const [peerConnection,setPeerConnection]=useState(null);
-    const [amIOffering,setAmIOffering]=useState(true);
+    const [amIOffering,setAmIOffering]=useState(null);
     const localVideoRef=useRef(null);
     const remoteVideoRef=useRef(null);
     const navigate = useNavigate();
@@ -50,7 +50,7 @@ const Meetings = () => {
         
     },[])
     function setUpLocalVideoSetup(){
-        console.log("local stream",localStream);
+        //console.log("local stream",localStream);
         if(localStream){
             localVideoRef.current.srcObject=localStream;
             localVideoRef.current.autoplay = true;
@@ -63,12 +63,14 @@ const Meetings = () => {
                 userName:userInfo.firstName,
             }
         });
-        
-        mediaio.on("existingOffer",(data)=>{
-           if(data){
-             establishPeerConnection();
+        mediaio.emit("amIOffering");
+        mediaio.on("existingOffer",async (data)=>{
+            console.log(data);
+           if(data.offerUserName){
+            await establishPeerConnection();
             peerConnection.setRemoteDescription(data.offer);
             setAmIOffering(false);
+            console.log("i am answering");
             //add tracks to remoteVideo here
             peerConnection.createAnswer().then((answer)=>{
                 peerConnection.setLocalDescription(answer);
@@ -77,7 +79,7 @@ const Meetings = () => {
                     answererUserName:userInfo.firstName,
                     
                 });
-                let offererIceCandidate;
+                let offererIceCandidate=[];
                 mediaio.on("receiveOffererIceCandidates",()=>{
                     offererIceCandidate=data;
                 })
@@ -89,31 +91,45 @@ const Meetings = () => {
             })
             
            }
+           else{
+            setAmIOffering(true);
+           }
 
         })
-        if(amIOffering){
-            establishPeerConnection();
-            
-            if(localStream){
-                localStream.getTracks().forEach((track)=>{
-                    peerConnection.addTrack(track,localStream);
-                })
-            }
-            peerConnection.createOffer().then((offer)=>{
-                peerConnection.setLocalDescription(offer);
-                mediaio.emit("offer",{
-                    offer:offer,
-                    offererUserName:userInfo.firstName,
-                });
-            })
+        if(amIOffering===true){
+            establishPeerConnection().then(()=>{;
+                console.log('i am offering');
+                if(localStream){
+                    localStream.getTracks().forEach((track)=>{
+                        peerConnection.addTrack(track,localStream);
+                    })
+                }
+                if(peerConnection){
+                    peerConnection.createOffer().then((offer)=>{
+                    peerConnection.setLocalDescription(offer);
+                    mediaio.emit("offer",{
+                        offer:offer,
+                        offererUserName:userInfo.firstName,
+                    });
+                    })
+                }
+            });
         }
-
-
     }
-    function establishPeerConnection(){
-        // return new Promise(async(resolve,reject)=>{ 
+
+
+    
+    async function establishPeerConnection(){
+        return new Promise(async(resolve,reject)=>{ 
             const peer=new RTCPeerConnection({
-                peerConfiguration
+                iceServers:[
+                    {
+                        urls:[
+                          'stun:stun.l.google.com:19302',
+                          'stun:stun1.l.google.com:19302'
+                        ]
+                    }
+                ]
             })
             setPeerConnection(peer);
             peer.onicecandidate=(event)=>{
@@ -130,8 +146,8 @@ const Meetings = () => {
                 setRemoteStream(event.streams[0]);
                 remoteVideoRef.current.srcObject=event.streams[0];
             }
-            // resolve();
-        // })
+             resolve();
+         })
         
     }
     async function setMedia(){
@@ -155,9 +171,9 @@ const Meetings = () => {
         })
     }
     useEffect(()=>{
-        console.log("local stream",localStream);
+        // console.log("local stream",localStream);
         if(localStream){
-            //const localVideo = document.querySelector(".localVideoStream");
+    
             localVideoRef.current.srcObject=localStream;
             localVideoRef.current.autoplay = true;
             localVideoRef.current.muted = true;
