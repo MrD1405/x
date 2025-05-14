@@ -126,6 +126,8 @@ export class Office extends Scene
         
         this.pos.y=this.player_instance.y;
        
+        this.vel.x=this.player_instance.body.velocity.x;
+        this.vel.y=this.player_instance.body.velocity.y;
         if(this.pos.x!=this.oldPos.x|| this.pos.y!=this.oldPos.y){
             //console.log("player is moving");
             this.socket.emit("playerMovement",{
@@ -153,14 +155,18 @@ export class Office extends Scene
 
         // console.log("here it is",this.playerNames[this.clientId]);
         // console.log(this.playerNames);
+        //console.log(this.player_instance.anims);
         this.showTextMovement(this.playerNames[this.clientId],this.player_instance);
-        // this.tweens.add({
-        //     targets:this.playerNames[this.clientId],
-        //     x:this.player_instance.x,
-        //     y:this.player_instance.y-16,
-        //     ease:'Linear',
-        //     duration:2,
-        // })
+
+        for(const [clientId,player] of Object.entries(this.otherPlayers)){
+            if(player.idle===true && player.anims.currentAnim.key==='run-left'){
+                setTimeout(()=>{player.anims.play('idle-right',true)});
+            }
+            // if(player.anims.currentAnim.key==='run-right'){
+            //     player.anims.play('idle-right',true);
+            // }
+        }
+        
         ///if a person enters a certain boundary create another room for him
         //we should have 2 desks and a meeting room
         //create whiteboard
@@ -215,6 +221,7 @@ export class Office extends Scene
             this.physics.add.collider(this.layer2,player);
             player.setCollideWorldBounds(true);
             this.otherPlayers[clientId]=player;
+            player.idle=true;
         });
         this.socket.on("allMembers",(data)=>{
             console.log(data);
@@ -258,23 +265,32 @@ export class Office extends Scene
                     targets:otherPlayerName,
                     x:x,
                     y:y-16,
-                    duration:1000,
+                    duration:100,
                     ease:'Linear'
                 });
+                console.log(otherplayer);
                 this.tweens.add({
                     targets:otherplayer,
                     x:x,
                     y:y,
-                    duration:1000,
+                    duration:100,
                     ease:'Linear',
+                    
                     onActive:()=>{
-                        otherplayer.anims.play('run-right',true);
-                        //else otherplayer.anims.play('run-right',true);
+                        otherplayer.idle=false;
+                        if(vel.x>0)otherplayer.anims.play('run-right',true);
+                        else otherplayer.anims.play('run-left',true);
                     },
                     onComplete:()=>{
-                        otherplayer.anims.play('idle-right',true);
+                        otherplayer.idle=true;
                     }
                 });
+                //brute force approach to solve the problem of idle animation
+                // setTimeout(()=>{
+                //     if(otherplayer.idle===true){
+                //         otherplayer.anims.play('idle-right',true);
+                //     }
+                // },2000)
                 
             }
         });

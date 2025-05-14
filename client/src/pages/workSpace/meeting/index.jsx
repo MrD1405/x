@@ -28,33 +28,19 @@ const Meetings = () => {
     let mediaio=null;
 
     const handleLeaveClick = async ()=>{
-        if(peerConnection){
-                peerConnection.close();
-                peerConnection.onicecandidate = null
-                peerConnection.onaddstream = null
-                setPeerConnection(null);
-
-            //set both video tags to empty
-            localVideoRef.current.srcObject = null;
-            remoteVideoRef.current.srcObject = null;
-        }
-        navigate("/workspace");
     
     };
 
     const handleMicrophoneClick = async ()=>{
         //Add more functionality about mic on and off
+
         setAudioOn(!isAudioOn);
     };
 
     const handleVideoClick = async ()=>{
         //Add more functionality about video on and off
         setVideoOn(!isVideoOn);
-        if(isVideoOn){
-            localVideoRef.current.srcObject = null;
-        }else{
-            localVideoRef.current.srcObject=localStream;
-        }
+    
     };
     useEffect(()=>{
         setMedia().then(()=>{
@@ -80,14 +66,22 @@ const Meetings = () => {
         });
         mediaio.emit("amIOffering");
         mediaio.on("existingOffer",async (data)=>{
+            // console.log(data.offererUserName );
+           if(data.offererUserName!==null && data.offererUserName!==userInfo.firstName){
             console.log(data);
-           if(data.offerUserName){
             await establishPeerConnection();
+            console.log(peerConnection)
             peerConnection.setRemoteDescription(data.offer);
             setAmIOffering(false);
             console.log("i am answering");
+            // if(localStream){
+            //     localStream.getTracks().forEach((track)=>{
+            //         peerConnection.addTrack(track,localStream);
+            //     })
+            // }
             //add tracks to remoteVideo here
             peerConnection.createAnswer().then((answer)=>{
+                
                 peerConnection.setLocalDescription(answer);
                 mediaio.emit("answer",{
                     answer,
@@ -96,7 +90,7 @@ const Meetings = () => {
                 });
                 let offererIceCandidate=[];
                 mediaio.on("receiveOffererIceCandidates",()=>{
-                    offererIceCandidate=data;
+                    offererIceCandidate.push(data);
                 })
                 
                 console.log(offererIceCandidate);
@@ -108,9 +102,13 @@ const Meetings = () => {
            }
            else{
             setAmIOffering(true);
+            prepareOffer();
            }
 
         })
+        
+    }
+    function prepareOffer(){
         if(amIOffering===true){
             establishPeerConnection().then(()=>{;
                 console.log('i am offering');
@@ -187,6 +185,7 @@ const Meetings = () => {
     }
     useEffect(()=>{
         // console.log("local stream",localStream);
+        //console.log("local stream",localStream);
         if(localStream){
     
             localVideoRef.current.srcObject=localStream;
@@ -243,11 +242,11 @@ const Meetings = () => {
                             </Tooltip>
                             <Tooltip>
                                 <TooltipTrigger className="flex items-center justify-items-center">                                
-                                    <Button className="text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " onClick = {handleLeaveClick}>
+                                    <Button className="text-white/50 text-sm border-white/20 border-1 bg-[#1b2c3e] rounded-lg px-1 py-1 " onClick = {()=>{navigate("/workspace")}}>
                                         Leave Meeting
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent className="bg-[#1c1b1e] border-none text-white">
+                                <TooltipContent className="bg-[#1c1b1e] border-none text-white" onClick={()=>{navigate("/workspace")}}>
                                     Leave
                                 </TooltipContent>
                             </Tooltip>
