@@ -8,6 +8,8 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { useNavigate } from 'react-router-dom';
 import window_tempate from "@/assets/window_template.jpg";
 import {Card,CardContent,CardDescription,CardFooter,CardHeader,CardTitle,} from "@/components/ui/card"
+import { apiClient } from "@/lib/api-client.js";
+import { LOGOUT_ROUTE } from '@/utils/constants';
 
 const Home = () => {
 

@@ -48,8 +48,8 @@ const Auth = () => {
             const response = await apiClient.post(LOGIN_ROUTE, {email,password},{withCredentials: true});
             if(response.data.user.id){
                 setUserInfo(response.data.user);
-                if(response.data.user.profileSetup) navigate('/home');
-                else navigate('/profile');
+                if(response.data.user.profileSetup) navigate("/home");
+                else navigate("/profile");
             }
             console.log(response);
         }

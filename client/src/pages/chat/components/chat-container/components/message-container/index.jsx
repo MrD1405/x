@@ -170,7 +170,7 @@ const MessageContainer = () => {
                     </AvatarFallback>
                     
                     </Avatar> 
-                    <span className="text-sm text-white/60">{`${message.snder.firstName} ${message.sender.lastName}`}</span>
+                    <span className="text-sm text-white/60">{`${message.sender.firstName} ${message.sender.lastName}`}</span>
                     <span className="text-sm text-white/60" mt-1>{moment(message.timestamp).format("LT")}
                     </span>
                 </div>) : (<div className="text-sm text-white/60" mt-1>{moment(message.timestamp).format("LT")}

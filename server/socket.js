@@ -59,7 +59,7 @@ const setupSocket = (server) => {
         const recipientSocketId  = userSocketMap.get(message.recipient);
 
         const createdMessage = await Message.create(message);
-
+        console.log("created message");
         const messageData = await Message.findById(createdMessage._id).populate("sender","id email firstName lastName image color")
                                 .populate("recipient","id email firstName lastName image color");
 
@@ -78,11 +78,11 @@ const setupSocket = (server) => {
 
         const messageData = await Message.findById(createdMessage._id).populate("sender","id email firstName lastName image color").exec();
 
-        await Channel.findByIdAndUpdate({
+        await Channel.findByIdAndUpdate(channelId,{
             $push: {messages: createdMessage._id},
         });
 
-        const channel = await Channel.findById(channelId).populate(members);
+        const channel = await Channel.findById(channelId).populate("members");
 
         const finalData = {...messageData._doc,channelId: channel._id};
 
@@ -92,11 +92,11 @@ const setupSocket = (server) => {
                 if(memberSocketId){
                     io.to(memberSocketId).emit('recieve-channel-message', finalData);
                 }
+                const adminSocketId = userSocketMap.get(member._id.toString());
+                if(adminSocketId){
+                        io.to(adminSocketId).emit('recieve-channel-message', finalData);
+                }
             });
-            const adminSocketId = userSocketMap.get(member._id.toString());
-            if(adminSocketId){
-                    io.to(adminSocketId).emit('recieve-channel-message', finalData);
-            }
         }
 
     };

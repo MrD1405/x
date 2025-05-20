@@ -24,7 +24,7 @@ const ChatHeader = () => {
                                                 }</div> )
                                 }
                             </Avatar> ) : (<div className="bg-[#ffffff22] h-10 w-10 flex items-center justify-center rounded-full">{
-                            isChannel ? <span>{Contact.name}</span> : <span> {`${contact.firstName} ${contact.lastName}`}</span>
+                            selectedChatType !== "contact" ? <span>{selectedChatData.name}</span> : <span> {`${selectedChatData.firstName} ${selectedChatData.lastName}`}</span>
                         }
                             </div>)
                         }

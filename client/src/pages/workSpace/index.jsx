@@ -8,6 +8,8 @@ import { useAppStore } from '@/store';
 import { useNavigate } from 'react-router-dom';
 import { IoPowerSharp, IoChatbubbles} from 'react-icons/io5';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/api-client';
+import { LOGOUT_ROUTE } from '@/utils/constants';
 
 //import { toBeEnabled } from '@/game/scenes/Office';
 import  setUpMedia ,{setUpPeerConnection} from '@/calls/setUpMedia';

@@ -16,8 +16,8 @@ import io from 'socket.io-client';
 const Meetings = () => {
 
     const {userInfo,setUserInfo} = useAppStore();
-    const [isAudioOn, setAudioOn] = useState(false);
-    const [isVideoOn, setVideoOn] = useState(false);
+    const [isAudioOn, setAudioOn] = useState(true);
+    const [isVideoOn, setVideoOn] = useState(true);
     const [localStream,setLocalStream] = useState(null);
     const [remoteStream,setRemoteStream]=useState(null);
     const [peerConnection,setPeerConnection]=useState(null);
@@ -27,7 +27,9 @@ const Meetings = () => {
     const navigate = useNavigate();
     let mediaio=null;
 
+    const handleLeaveClick = async ()=>{
     
+    };
 
     const handleMicrophoneClick = async ()=>{
         //Add more functionality about mic on and off
@@ -38,6 +40,11 @@ const Meetings = () => {
     const handleVideoClick = async ()=>{
         //Add more functionality about video on and off
         setVideoOn(!isVideoOn);
+        if(isVideoOn){
+            localVideoRef.current.srcObject = null;
+        }else{
+            localVideoRef.current.srcObject=localStream;
+        }
     };
     useEffect(()=>{
         setMedia().then(()=>{
