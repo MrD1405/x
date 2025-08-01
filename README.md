@@ -22,7 +22,7 @@ A virtual workspace platform - SynergySpace is a metaverse based virtual workspa
 Clone the project
 
 ```bash
-  git clone https://github.com/Sunandana74/SynergySpace.git
+  git clone https://github.com/MrD1405/SynergySpace.git
 ```
 
 Go to the project directory
